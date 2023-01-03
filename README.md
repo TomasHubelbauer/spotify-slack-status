@@ -1,6 +1,9 @@
 # Spotify Slack Status
 
-This script will set your Slack status to the current song playing in Spotify.
+This script will set your Slack status to the current song playing in Spotify
+and update it every 10 seconds as long as your Slack status is empty or set to
+`:headphones:`.
+It will not overwrite your Slack status if you set your own status.
 
 ```sh
 # Make sure these prerequisites are met in order for this script to work
@@ -17,11 +20,11 @@ This script will set your Slack status to the current song playing in Spotify.
 # - Copy User OAuth Token under OAuth Tokens for Your Workspace
 TOKEN=$(cat slack.pat)
 
+# Configure the delay between the Spotify checks and Slack status updates
+DELAY=10
+
 while true
 do
-  echo "Stamp:"
-  date -Iseconds
-
   # Bail if Slack status is already set and is not `:headphones:`
   EMOJI=$(curl -H "Authorization: Bearer $TOKEN" --no-progress-meter https://slack.com/api/users.profile.get | jq --raw-output '.profile.status_emoji')
   if [ -n "$EMOJI" ];
@@ -29,7 +32,7 @@ do
     if [ "$EMOJI" != ":headphones:" ];
     then
       echo "Slack status is $EMOJI, not :headphones: or empty, waiting a minute…"
-      sleep 60
+      sleep $DELAY
       continue
     fi
   fi
@@ -39,7 +42,7 @@ do
   if [ -z "$RUNNING" ];
   then
     echo "Spotify is off, waiting a minute…"
-    sleep 60
+    sleep $DELAY
     continue
   fi
 
@@ -51,32 +54,34 @@ do
   if [ -z "$ARTIST" ] || [ -z "$SONG" ];
   then
     echo "Spotify is not playing anything, waiting a minute…"
-    sleep 60
+    sleep $DELAY
     continue
   fi
 
   # Schedule status expiration for 5 minutes from now to clear if not replaced
-  STAMP=$(date -v"+5M" +%s)
-  JSON=$(echo '{}' | jq --arg SONG "$SONG" --arg ARTIST "$ARTIST" --arg STAMP $STAMP '.profile.status_text=$ARTIST+" - "+$SONG | .profile.status_emoji=":headphones:" | .profile.status_expiration=($STAMP|tonumber)')
-  echo "Request:"
-  echo "$JSON" | jq '.'
+  STAMP=$(date -v"+1M" +%s)
+  REQUEST_JSON=$(echo '{}' | jq --arg SONG "$SONG" --arg ARTIST "$ARTIST" --arg STAMP $STAMP '.profile.status_text=$ARTIST+" - "+$SONG | .profile.status_emoji=":headphones:" | .profile.status_expiration=($STAMP|tonumber)')
 
   # See https://api.slack.com/docs/presence-and-status#custom_status
-  echo "Response:"
-  curl -X POST --data "$JSON" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json; charset=utf-8" --no-progress-meter https://slack.com/api/users.profile.set | jq 'del(.profile)'
+  RESPONSE_JSON=$(curl -X POST --data "$REQUEST_JSON" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json; charset=utf-8" --no-progress-meter https://slack.com/api/users.profile.set | jq 'del(.profile)')
 
+  echo "$(date -Iseconds) $(echo "$REQUEST_JSON" | jq '.profile.status_text') $(echo "$RESPONSE_JSON" | jq '.ok')"
+  
   # Wait for a minute in between the status updates
-  sleep 60
-  echo ""
+  sleep $DELAY
 done
 ```
 
 To use, copy-paste it to a file named `spotify-slack-status.sh` and
 run `chmod +x spotify-slack-status.sh` and then `./spotify-slack-status.sh`.
 
-It will update the status every minute and will set its expiration to five minutes.
-It will not update the status if it is not empty or already set to `:headphones:`,
-meaning it will not interfere with your lunch status or anything of the sort.
+The script will set the status to expire in a minute so that if either the script
+or Spotify quit abruptly, the status will be cleared and won't linger around.
+
+Note that sometimes due to sheer coincidence the script might pick up new song
+name but old artist name.
+If this happens, it will be fixed in the next loop run in 10 seconds, so it is no
+biggie.
 
 The script that gave me the push to attempt my own version of this is here:
 https://gist.github.com/jgamblin/9701ed50398d138c65ead316b5d11b26
@@ -87,17 +92,6 @@ a Slack app and it also uses a Slack API endpoint which no longer exists and I
 replaced it with a correct one based on the current Slack API documentation.
 
 ## To-Do
-
-### Add a Bash trap to react to Enter key press to force-reload while waiting
-
-I noticed sometimes the 1-minute refresh interval falls right between when the
-artist is still old but the song is already new resulting in non-sensical names.
-
-For debugging purposes I would like to add an Enter-trap and force-refresh even
-when in the midst of the 1-minute wait between updates.
-
-For the real fix, update the logic to read the artist and song twice and only
-update when the values still agree 1 second or 10 seconds apart.
 
 ### Install this as a login items
 
