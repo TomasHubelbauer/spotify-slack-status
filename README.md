@@ -15,9 +15,27 @@ do
   echo "Stamp:"
   date -Iseconds
 
+  RUNNING=$(pgrep -lf Spotify)
+  # Bail if Spotify is not running to prevent `osascript` from launching it
+  if [ -z "$RUNNING" ];
+  then
+    echo "Spotify is off, waiting a minute…"
+    sleep 60
+    continue
+  fi
+
   # See `/Applications/Spotify.app/Contents/Resources/Spotify.sdef`
   ARTIST=$(osascript -e 'tell application "Spotify" to artist of current track')
   SONG=$(osascript -e 'tell application "Spotify" to name of current track')
+
+  # Bail if Spotify is not playing anything (but is running)
+  if [ -z "$ARTIST" ] || [ -z "$SONG" ];
+  then
+    echo "Spotify is not playing anything, waiting a minute…"
+    sleep 60
+    continue
+  fi
+
   STAMP=$(date -v"+5M" +%s)
   JSON=$(echo '{}' | jq --arg SONG "$SONG" --arg ARTIST "$ARTIST" --arg STAMP $STAMP '.profile.status_text=$ARTIST+" - "+$SONG | .profile.status_emoji=":headphones:" | .profile.status_expiration=($STAMP|tonumber)')
   echo "Request:"
@@ -39,10 +57,6 @@ run `chmod +x spotify-slack-status.sh` and then `./spotify-slack-status.sh`.
 It will update the status every minute and will set its expiration to five minutes.
 
 ## To-Do
-
-### Test what happens when Spotify is not running or ceases to run during
-
-Easy to test but I am lazy right now so storing for later.
 
 ### Add a Bash trap to react to Enter key press to force-reload while waiting
 
