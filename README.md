@@ -93,8 +93,23 @@ replaced it with a correct one based on the current Slack API documentation.
 
 ## To-Do
 
-### Install this as a login items
+### Install this as a login item
 
 I would like for the script to start running automatically on macOS logon.
 However, I don't want to be blind to its output so I need to find a way to attach
 a console to it when started as a login item.
+
+### Skip the status update if it would have resulted in the same status text
+
+Slack seems to animate the status updates in the people roster and the status
+dropdown so potentially it would pulse every 10 seconds even when there is a need
+to update the status every 3-5 minutes depending on the songs.
+
+I will introduce a new check to bail if the existing status and new status have
+the same text.
+
+Althought I need to think about how this will interact with the short status
+expiration.
+Maybe I can fetch the song length from Spotify and set the status expiration to
+that but that will re-introduce the problem with mismatched artist and song in
+case of that race condition.
