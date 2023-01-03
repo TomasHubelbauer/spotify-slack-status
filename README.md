@@ -56,6 +56,14 @@ run `chmod +x spotify-slack-status.sh` and then `./spotify-slack-status.sh`.
 
 It will update the status every minute and will set its expiration to five minutes.
 
+The script that gave me the push to attempt my own version of this is here:
+https://gist.github.com/jgamblin/9701ed50398d138c65ead316b5d11b26
+
+It helped me figure out how to use `osascript` to talk to Spotify, but it is
+using the legacy token type which is no longer supported and I replaced it with
+a Slack app and it also uses a Slack API endpoint which no longer exists and I
+replaced it with a correct one based on the current Slack API documentation.
+
 ## To-Do
 
 ### Add a Bash trap to react to Enter key press to force-reload while waiting
