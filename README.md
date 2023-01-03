@@ -36,6 +36,7 @@ do
     continue
   fi
 
+  # Schedule status expiration for 5 minutes from now to clear if not replaced
   STAMP=$(date -v"+5M" +%s)
   JSON=$(echo '{}' | jq --arg SONG "$SONG" --arg ARTIST "$ARTIST" --arg STAMP $STAMP '.profile.status_text=$ARTIST+" - "+$SONG | .profile.status_emoji=":headphones:" | .profile.status_expiration=($STAMP|tonumber)')
   echo "Request:"
