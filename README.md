@@ -3,9 +3,16 @@
 This script will set your Slack status to the current song playing in Spotify.
 
 ```sh
+# Make sure these prerequisites are met in order for this script to work
+# - macOS
+# - jq (`brew install jq`)
+# - Spotify
+
 # Get this token by:
 # - Creating a Slack app https://api.slack.com/apps
-# - Select Permissions > Scopes > User Token Scopes and add `users.profile:write`
+# - Go to Permissions > Scopes > User Token Scopes
+# - Add `users.profile:write` for the status update Slack API call
+# - Add `users.profile:read` for the :headphones: current status emoji check
 # - Scroll up and select Install to Workspace under OAuth Tokens for Your Workspace
 # - Copy User OAuth Token under OAuth Tokens for Your Workspace
 TOKEN=$(cat slack.pat)
@@ -14,6 +21,18 @@ while true
 do
   echo "Stamp:"
   date -Iseconds
+
+  # Bail if Slack status is already set and is not `:headphones:`
+  EMOJI=$(curl -H "Authorization: Bearer $TOKEN" --no-progress-meter https://slack.com/api/users.profile.get | jq --raw-output '.profile.status_emoji')
+  if [ -n "$EMOJI" ];
+  then
+    if [ "$EMOJI" != ":headphones:" ];
+    then
+      echo "Slack status is $EMOJI, not :headphones: or empty, waiting a minute…"
+      sleep 60
+      continue
+    fi
+  fi
 
   RUNNING=$(pgrep -lf Spotify)
   # Bail if Spotify is not running to prevent `osascript` from launching it
@@ -56,6 +75,8 @@ To use, copy-paste it to a file named `spotify-slack-status.sh` and
 run `chmod +x spotify-slack-status.sh` and then `./spotify-slack-status.sh`.
 
 It will update the status every minute and will set its expiration to five minutes.
+It will not update the status if it is not empty or already set to `:headphones:`,
+meaning it will not interfere with your lunch status or anything of the sort.
 
 The script that gave me the push to attempt my own version of this is here:
 https://gist.github.com/jgamblin/9701ed50398d138c65ead316b5d11b26
@@ -83,7 +104,3 @@ update when the values still agree 1 second or 10 seconds apart.
 I would like for the script to start running automatically on macOS logon.
 However, I don't want to be blind to its output so I need to find a way to attach
 a console to it when started as a login item.
-
-### Skip resetting the status if not empty of `:headphones:`
-
-Make the script respect custom statuses by not replacing them.
