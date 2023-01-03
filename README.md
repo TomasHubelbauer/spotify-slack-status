@@ -114,3 +114,15 @@ expiration.
 Maybe I can fetch the song length from Spotify and set the status expiration to
 that but that will re-introduce the problem with mismatched artist and song in
 case of that race condition.
+
+### Consider uploading the album art for the album as a custom status emoji
+
+Here's how you add emoji by hand:
+https://slack.com/help/articles/206870177-Add-custom-emoji-and-aliases-to-your-workspace
+
+Here's an API that can be used to do that programatically:
+https://api.slack.com/methods/admin.emoji.add
+
+I could upload a custom emoji for each album and use it as a status emoji.
+I would need to adjust the check to check for a prefix/suffix not for the
+`:headphones:` emoji.
