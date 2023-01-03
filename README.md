@@ -39,6 +39,7 @@ do
 
   RUNNING=$(pgrep -lf Spotify)
   # Bail if Spotify is not running to prevent `osascript` from launching it
+  # Do not bail if Slack is not running as it might be running on the phone
   if [ -z "$RUNNING" ];
   then
     echo "Spotify is off, waiting a minute…"
