@@ -33,7 +33,27 @@ do
 done
 ```
 
+To use, copy-paste it to a file named `spotify-slack-status.sh` and
+run `chmod +x spotify-slack-status.sh` and then `./spotify-slack-status.sh`.
+
+It will update the status every minute and will set its expiration to five minutes.
+
 ## To-Do
+
+### Test what happens when Spotify is not running or ceases to run during
+
+Easy to test but I am lazy right now so storing for later.
+
+### Add a Bash trap to react to Enter key press to force-reload while waiting
+
+I noticed sometimes the 1-minute refresh interval falls right between when the
+artist is still old but the song is already new resulting in non-sensical names.
+
+For debugging purposes I would like to add an Enter-trap and force-refresh even
+when in the midst of the 1-minute wait between updates.
+
+For the real fix, update the logic to read the artist and song twice and only
+update when the values still agree 1 second or 10 seconds apart.
 
 ### Install this as a login items
 
