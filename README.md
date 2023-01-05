@@ -94,6 +94,10 @@ replaced it with a correct one based on the current Slack API documentation.
 
 ## To-Do
 
+### Skip status update in case Spotify is open but paused, not playing
+
+I think `osascript` should have a way to ask Spotify for its playback status.
+
 ### Install this as a login item
 
 I would like for the script to start running automatically on macOS logon.
