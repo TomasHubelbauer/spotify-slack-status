@@ -31,7 +31,7 @@ do
   then
     if [ "$EMOJI" != ":headphones:" ];
     then
-      echo "Slack status is $EMOJI, not :headphones: or empty, waiting a minute…"
+      echo "Slack status is $EMOJI, not :headphones: or empty, waiting for $DELAY seconds…"
       sleep $DELAY
       continue
     fi
@@ -42,19 +42,20 @@ do
   # Do not bail if Slack is not running as it might be running on the phone
   if [ -z "$RUNNING" ];
   then
-    echo "Spotify is off, waiting a minute…"
+    echo "Spotify is off, waiting for $DELAY seconds…"
     sleep $DELAY
     continue
   fi
 
   # See `/Applications/Spotify.app/Contents/Resources/Spotify.sdef`
+  STATE=$(osascript -e 'tell application "Spotify" to player state')
   ARTIST=$(osascript -e 'tell application "Spotify" to artist of current track')
   SONG=$(osascript -e 'tell application "Spotify" to name of current track')
 
-  # Bail if Spotify is not playing anything (but is running)
-  if [ -z "$ARTIST" ] || [ -z "$SONG" ];
+  # Bail if Spotify is not in playing state (paused, stopped) but is running
+  if [ "$STATE" != "playing" ];
   then
-    echo "Spotify is not playing anything, waiting a minute…"
+    echo "Spotify is not playing anything, waiting for $DELAY seconds…"
     sleep $DELAY
     continue
   fi
@@ -94,10 +95,6 @@ replaced it with a correct one based on the current Slack API documentation.
 
 ## To-Do
 
-### Skip status update in case Spotify is open but paused, not playing
-
-I think `osascript` should have a way to ask Spotify for its playback status.
-
 ### Install this as a login item
 
 I would like for the script to start running automatically on macOS logon.
@@ -120,6 +117,9 @@ that but that will re-introduce the problem with mismatched artist and song in
 case of that race condition.
 
 ### Consider uploading the album art for the album as a custom status emoji
+
+To get the album image, use:
+`osascript -e 'tell application "Spotify" to artwork url of current track'`
 
 Here's how you add emoji by hand:
 https://slack.com/help/articles/206870177-Add-custom-emoji-and-aliases-to-your-workspace
