@@ -11,6 +11,10 @@ It will not overwrite your Slack status if you set your own status.
 # - jq (`brew install jq`)
 # - Spotify
 
+# Find the directory the script is in for relative access to `slack.pat`
+# Note that this is required when running as a login item which starts in `~`
+DIR=$(dirname "$(readlink -f -- "$0")")
+
 # Get this token by:
 # - Creating a Slack app https://api.slack.com/apps
 # - Go to Permissions > Scopes > User Token Scopes
@@ -18,7 +22,7 @@ It will not overwrite your Slack status if you set your own status.
 # - Add `users.profile:read` for the :headphones: current status emoji check
 # - Scroll up and select Install to Workspace under OAuth Tokens for Your Workspace
 # - Copy User OAuth Token under OAuth Tokens for Your Workspace
-TOKEN=$(cat slack.pat)
+TOKEN=$(cat $DIR/slack.pat)
 
 # Configure the delay between the Spotify checks and Slack status updates
 DELAY=10
