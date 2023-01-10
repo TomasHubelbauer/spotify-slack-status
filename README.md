@@ -93,13 +93,34 @@ using the legacy token type which is no longer supported and I replaced it with
 a Slack app and it also uses a Slack API endpoint which no longer exists and I
 replaced it with a correct one based on the current Slack API documentation.
 
+## Login Item
+
+To make this script run on macOS startup, do the following:
+
+- Create a file named `spotify-slack-status.command` alongside the main script
+- Make the file executable using `chmod +x spotify-slack-status.command`
+- Put the following content into the file:
+  ```sh
+  screen -d -m ./Desktop/…/spotify-slack-status.sh -S spotify-slack-status
+  exit
+  ```
+- Go to Apple > System Settings > General > Login Items > +
+- Find the `spotify-slack-status.command` file and add it as a login item
+- Go to Apple > Log Out and then log back in to a new macOS user session
+
+You will be greeter with a Terminal window that says that the process exited.
+This window will appear after each log in into macOS and is safe to close.
+The Spotify Slack status updated script is now running in the background.
+You can verify this by running `screen -ls` or this command:
+`ps x | grep spotify-slack-status | grep SCREEN`
+
+To monitor the script's output, run `screen -r $PID` where `$PID` is the number
+shown when running the previous command.
+
+To exit the output monitoring without killing the script, press Ctrl+a+d.
+To kill the script, press Ctrl+C instead.
+
 ## To-Do
-
-### Install this as a login item
-
-I would like for the script to start running automatically on macOS logon.
-However, I don't want to be blind to its output so I need to find a way to attach
-a console to it when started as a login item.
 
 ### Skip the status update if it would have resulted in the same status text
 
